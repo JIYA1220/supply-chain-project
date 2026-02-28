@@ -12,3 +12,4 @@ openpyxl==3.1.2
 colorama==0.4.6
 tqdm==4.66.1
 reportlab==4.1.0
+gdown==5.1.0
