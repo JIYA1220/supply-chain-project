@@ -21,33 +21,24 @@
 import pickle
 import warnings
 import os
+import sys
 import numpy  as np
 import pandas as pd
 import plotly.express       as px
 import plotly.graph_objects as go
 import streamlit            as st
-import sys
 
-sys.path.append(os.path.dirname(__file__))
-from data_loader import load_data
+# 1. CRITICAL: st.set_page_config must be the FIRST streamlit command
+st.set_page_config(
+    page_title = "Supply Chain Intelligence",
+    layout     = "wide",
+    initial_sidebar_state = "expanded",
+)
 
-# Show banner if running on Streamlit Cloud (no real data)
-if not os.path.exists("data/cleaned/dataco_cleaned.csv"):
-    st.info(
-        "Demo Mode: Real datasets are being loaded from Google Drive. "
-        "This may take a moment on first launch.",
-        icon="ℹ️"
-    )
-
-# Load data (auto-downloads from Drive if needed)
-df = load_data()
-
+# 2. Suppress warnings
 warnings.filterwarnings("ignore")
 
-# ════════════════════════════════════════════════════════════════
-#  PATH HELPERS
-# ════════════════════════════════════════════════════════════════
-
+# 3. Path helpers
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def get_path(rel_path):
@@ -60,16 +51,6 @@ def get_path(rel_path):
             return rel_path
         path = os.path.join(SCRIPT_DIR, rel_path)
     return path
-
-# ════════════════════════════════════════════════════════════════
-#  PAGE CONFIG
-# ════════════════════════════════════════════════════════════════
-
-st.set_page_config(
-    page_title = "Supply Chain Intelligence",
-    layout     = "wide",
-    initial_sidebar_state = "expanded",
-)
 
 # ════════════════════════════════════════════════════════════════
 #  MINIMALISTIC LIGHT CSS (Indigo & Amber)
@@ -160,21 +141,38 @@ COLOR_PAL  = ["#4F46E5", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"]
 @st.cache_data
 def load_dataco():
     path = get_path("../data/cleaned/dataco_clean.csv")
-    df = pd.read_csv(path, low_memory=False)
-    for col in df.columns:
-        if "date" in col:
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-    return df
+    if not os.path.exists(path):
+        # Try local path if running in src/
+        path = os.path.join(SCRIPT_DIR, "data/cleaned/dataco_clean.csv")
+    
+    if os.path.exists(path):
+        df = pd.read_csv(path, low_memory=False)
+        for col in df.columns:
+            if "date" in col:
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+        return df
+    else:
+        # Fallback to user's data_loader if it exists
+        try:
+            sys.path.append(SCRIPT_DIR)
+            from data_loader import load_data
+            return load_data()
+        except Exception:
+            return pd.DataFrame()
 
 @st.cache_data
 def load_products():
     path = get_path("../data/cleaned/product_chain_clean.csv")
-    return pd.read_csv(path, low_memory=False)
+    if os.path.exists(path):
+        return pd.read_csv(path, low_memory=False)
+    return pd.DataFrame()
 
 @st.cache_data
 def load_trade():
     path = get_path("../data/cleaned/global_trade_clean.csv")
-    return pd.read_csv(path, low_memory=False)
+    if os.path.exists(path):
+        return pd.read_csv(path, low_memory=False)
+    return pd.DataFrame()
 
 @st.cache_resource
 def load_model():
@@ -182,10 +180,11 @@ def load_model():
         path = get_path("outputs/reports/best_model.pkl")
         with open(path, "rb") as f:
             return pickle.load(f)
-    except FileNotFoundError:
+    except Exception:
         return None
 
 def find(df, candidates):
+    if df is None or df.empty: return None
     for c in candidates:
         if c in df.columns: return c
     for c in candidates:
@@ -200,6 +199,9 @@ def find(df, candidates):
 
 def sidebar_filters(dc):
     st.sidebar.subheader("Analytics Scope")
+    if dc.empty:
+        st.sidebar.warning("No operational data loaded.")
+        return {}
     
     market_col = find(dc, ["market"])
     cat_col    = find(dc, ["category_name"])
@@ -225,6 +227,7 @@ def sidebar_filters(dc):
     return filters
 
 def apply_filters(dc, filters):
+    if dc.empty: return dc
     df = dc.copy()
     market_col = find(df, ["market"])
     cat_col    = find(df, ["category_name"])
@@ -241,10 +244,14 @@ def apply_filters(dc, filters):
     return df
 
 # ════════════════════════════════════════════════════════════════
-#  KPI TAB
+#  TAB 1 — PERFORMANCE
 # ════════════════════════════════════════════════════════════════
 
 def tab_kpis(df):
+    if df.empty:
+        st.info("Performance metrics unavailable (empty dataset).")
+        return
+
     sales_col  = find(df, ["sales"])
     del_col    = find(df, ["is_delayed","late_delivery_risk"])
     profit_col = find(df, ["profit_margin_pct"])
@@ -267,37 +274,32 @@ def tab_kpis(df):
 
     st.markdown("---")
 
-    # 1. Professional Revenue Velocity (Full Width)
+    # 1. Professional Revenue Velocity
     date_col  = find(df, ["order_date"])
     if sales_col and date_col:
-        # Aggregating and calculating rolling average for professional look
         monthly = df.set_index(date_col).resample('M')[sales_col].sum().reset_index()
         monthly.columns = ["Date", "Revenue"]
         monthly["Trend (3mo Avg)"] = monthly["Revenue"].rolling(window=3).mean()
         
         fig_rev = go.Figure()
-        # Area for actual revenue
         fig_rev.add_trace(go.Scatter(
             x=monthly["Date"], y=monthly["Revenue"],
             fill='tozeroy', name="Actual Revenue",
             line=dict(color='rgba(79, 70, 229, 0.3)', width=0.5),
             fillcolor='rgba(79, 70, 229, 0.1)'
         ))
-        # Bold line for Trend
         fig_rev.add_trace(go.Scatter(
             x=monthly["Date"], y=monthly["Trend (3mo Avg)"],
             name="Strategic Trend",
             line=dict(color='#4F46E5', width=4, dash='solid')
         ))
-        
         fig_rev.update_layout(
             title="Revenue Analytics: Actuals vs Strategic Trend",
             paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
             font=dict(color=PLOT_TEXT, family="Inter"),
             xaxis=dict(gridcolor=PLOT_GRID, title="", showgrid=False),
             yaxis=dict(gridcolor=PLOT_GRID, title="Revenue ($)", tickformat="$,.0f"),
-            height=380,
-            margin=dict(t=60, b=40, l=10, r=10),
+            height=380, margin=dict(t=60, b=40, l=10, r=10),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             hovermode="x unified"
         )
@@ -305,64 +307,54 @@ def tab_kpis(df):
 
     st.markdown("---")
 
-    # 2. Vibrant & Smooth Animated 3D Market Trajectory (Full Width)
+    # 2. Animated 3D Trajectory
     st.subheader("Market Intelligence: 3D Strategic Evolution")
-    
     if all([sales_col, profit_col, qty_col, yr_col, market_col]):
-        # Data aggregation
         traj_df = df.groupby([market_col, yr_col]).agg({
             sales_col: "sum",
             profit_col: "mean",
             qty_col: "sum"
         }).reset_index().sort_values(yr_col)
 
-        # Using a much more vibrant and high-contrast color palette
         fig_3d = px.scatter_3d(
             traj_df, x=sales_col, y=profit_col, z=qty_col,
-            color=market_col,
-            size=sales_col,
-            animation_frame=yr_col,
-            animation_group=market_col,
+            color=market_col, size=sales_col,
+            animation_frame=yr_col, animation_group=market_col,
             labels={sales_col: "Revenue ($)", profit_col: "Margin (%)", qty_col: "Orders"},
             title="Strategic Market Flight-Paths (High Velocity)",
-            color_discrete_sequence=px.colors.qualitative.Vivid, # Vibrant palette
-            size_max=65, # Larger bubbles for more "pop"
-            opacity=0.9
+            color_discrete_sequence=px.colors.qualitative.Vivid,
+            size_max=65, opacity=0.9
         )
-
-        # Ultra-Smooth Cinematic Styling
         fig_3d.update_layout(
             margin=dict(l=0, r=0, b=0, t=50),
             scene=dict(
                 xaxis=dict(backgroundcolor="#F1F5F9", gridcolor="#CBD5E1", showbackground=True),
                 yaxis=dict(backgroundcolor="#F1F5F9", gridcolor="#CBD5E1", showbackground=True),
                 zaxis=dict(backgroundcolor="#F1F5F9", gridcolor="#CBD5E1", showbackground=True),
-                camera=dict(eye=dict(x=1.8, y=1.8, z=1.4)) # Slightly pulled back for better view
+                camera=dict(eye=dict(x=1.8, y=1.8, z=1.4))
             ),
-            height=700,
-            paper_bgcolor=PLOT_BG,
+            height=700, paper_bgcolor=PLOT_BG,
             font=dict(family="Inter", color=PLOT_TEXT),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        
-        # Super-smooth animation settings
-        fig_3d.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1200 # Longer duration
-        fig_3d.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = 800 # Smooth transition
-        fig_3d.layout.updatemenus[0].buttons[0].args[1]['transition']['easing'] = "cubic-in-out"
-        
+        fig_3d.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1200
+        fig_3d.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = 800
         st.plotly_chart(fig_3d, use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
-#  DELAY TAB
+#  TAB 2 — DISRUPTION
 # ════════════════════════════════════════════════════════════════
 
 def tab_delays(df):
+    if df.empty:
+        st.info("Disruption analytics unavailable.")
+        return
+
     is_del_col = find(df, ["is_delayed","late_delivery_risk"])
     ship_col   = find(df, ["shipping_mode"])
     market_col = find(df, ["market"])
     
     col1, col2 = st.columns([1.2, 0.8])
-
     with col1:
         if ship_col and is_del_col:
             grp = df.groupby(ship_col)[is_del_col].mean().mul(100).reset_index()
@@ -387,7 +379,6 @@ def tab_delays(df):
             fig.update_layout(paper_bgcolor=PLOT_BG, font=dict(color=PLOT_TEXT), height=400)
             st.plotly_chart(fig, use_container_width=True)
 
-    # Restored Disruption Heatmap
     st.markdown("---")
     st.subheader("Global Disruption Heatmap")
     if market_col and ship_col and is_del_col:
@@ -395,42 +386,37 @@ def tab_delays(df):
             values=is_del_col, index=market_col,
             columns=ship_col, aggfunc="mean"
         ).mul(100).round(1)
-
-        fig = px.imshow(
-            pivot,
-            color_continuous_scale="Greys",
-            title="Late Delivery Rate (%) — Market × Shipping Mode",
-            text_auto=".1f",
-        )
+        fig = px.imshow(pivot, color_continuous_scale="Greys",
+                        title="Late Delivery Rate (%) — Market × Shipping Mode", text_auto=".1f")
         fig.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
                           font=dict(color=PLOT_TEXT), height=450)
         st.plotly_chart(fig, use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
-#  SUPPLIER TAB
+#  TAB 3 — SUPPLIERS
 # ════════════════════════════════════════════════════════════════
 
 def tab_suppliers(pr):
-    st.subheader("Supplier Assessment")
+    if pr.empty:
+        st.info("Supplier analytics unavailable.")
+        return
 
     sup_col    = find(pr, ["supplier_name"])
     risk_col   = find(pr, ["supplier_risk_score"])
     defect_col = find(pr, ["defect_rates","defect_rate_pct"])
 
     if not (sup_col and risk_col):
-        st.info("Supplier analytics unavailable."); return
+        st.info("Insufficient supplier mapping data."); return
 
     grp = pr.groupby(sup_col).agg(
         Risk=(risk_col, "mean"),
         Defects=(defect_col, "mean") if defect_col else (risk_col, "mean")
     ).reset_index().round(2).sort_values("Risk", ascending=False).head(15)
 
-    # Circle size increased (size_max increased for better visibility)
     fig = px.scatter(grp, x="Defects", y="Risk", text=sup_col,
                      size="Risk", color="Risk",
                      title="Supplier Integrity Matrix (Top 15 Risk Profiles)",
-                     color_continuous_scale="YlOrRd",
-                     size_max=60) # Increased size from default ~30 to 60
+                     color_continuous_scale="YlOrRd", size_max=60)
     fig.update_traces(textposition='top center')
     fig.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
                       font=dict(color=PLOT_TEXT), height=500,
@@ -439,59 +425,21 @@ def tab_suppliers(pr):
     st.plotly_chart(fig, use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
-#  GLOBAL TRADE TAB (with animation)
-# ════════════════════════════════════════════════════════════════
-
-def tab_trade(tr):
-    st.subheader("Animated Global Trade Flux")
-
-    country_col = find(tr, ["country_or_area","country"])
-    trade_col   = find(tr, ["trade_usd_billions","trade_usd"])
-    yr_col      = find(tr, ["year"])
-    flow_col    = find(tr, ["flow"])
-
-    if not (country_col and trade_col and yr_col):
-        st.info("Insufficient trade data."); return
-
-    # Animated bubble chart of trade volume over years
-    # Prepare top countries for cleaner animation
-    top_countries = tr.groupby(country_col)[trade_col].sum().sort_values(ascending=False).head(15).index
-    tr_sub = tr[tr[country_col].isin(top_countries)].sort_values(yr_col)
-
-    fig = px.scatter(tr_sub, x=country_col, y=trade_col, animation_frame=yr_col,
-                     size=trade_col, color=flow_col,
-                     title="Trade Value Evolution (Top 15 Countries)",
-                     labels={trade_col: "Trade Value", yr_col: "Year"},
-                     color_discrete_sequence=[COLOR_MAIN, COLOR_SEC],
-                     size_max=50, range_y=[0, tr_sub[trade_col].max() * 1.1])
-    
-    fig.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
-                      font=dict(color=PLOT_TEXT), height=500,
-                      xaxis=dict(title="", gridcolor=PLOT_GRID),
-                      yaxis=dict(gridcolor=PLOT_GRID))
-    st.plotly_chart(fig, use_container_width=True)
-
-# ════════════════════════════════════════════════════════════════
-#  PREDICTOR TAB
+#  TAB 4 — PREDICTOR
 # ════════════════════════════════════════════════════════════════
 
 def tab_predictor():
     st.subheader("Intelligence Engine: Risk Forecasting")
-    
     model_data = load_model()
     if model_data is None:
-        st.warning("Prediction engine offline."); return
+        st.warning("Prediction engine offline. Please ensure outputs/reports/best_model.pkl exists."); return
 
     model = model_data["model"]
-    
-    # Try to extract required feature names from model steps
     try:
         if hasattr(model, "feature_names_in_"):
             expected_feats = model.feature_names_in_
         elif hasattr(model.named_steps.get("clf"), "feature_names_in_"):
             expected_feats = model.named_steps["clf"].feature_names_in_
-        elif hasattr(model.named_steps.get("scaler"), "feature_names_in_"):
-            expected_feats = model.named_steps["scaler"].feature_names_in_
         else:
             expected_feats = None
     except:
@@ -509,183 +457,92 @@ def tab_predictor():
         wkend = st.checkbox("Processing on Weekend")
 
     if st.button("RUN RISK ANALYSIS", use_container_width=True):
-        # Feature Mapping
         input_data = {
-            "days_for_shipment_scheduled": sched,
-            "order_item_quantity": qty,
-            "product_price": price,
-            "sales": sales,
-            "order_month": month,
-            "is_weekend": int(wkend),
-            "order_year": 2022, 
-            "profit_margin_pct": 10, 
-            "order_item_discount_rate": 0.1
+            "days_for_shipment_scheduled": sched, "order_item_quantity": qty,
+            "product_price": price, "sales": sales, "order_month": month,
+            "is_weekend": int(wkend), "order_year": 2022, "profit_margin_pct": 10
         }
-        
         X_df = pd.DataFrame([input_data])
-        
-        # Robust Feature Alignment to avoid ValueError
         if expected_feats is not None:
-            # Add missing features with default 0
             for f in expected_feats:
-                if f not in X_df.columns:
-                    X_df[f] = 0.0
-            # Ensure correct order and drop extra columns
+                if f not in X_df.columns: X_df[f] = 0.0
             X_df = X_df.reindex(columns=expected_feats)
         
         try:
             proba = model.predict_proba(X_df)[0][1]
-            
-            # High-Quality Animated Gauge
             fig = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = proba * 100,
-                domain = {'x': [0, 1], 'y': [0, 1]},
+                mode = "gauge+number", value = proba * 100,
                 title = {'text': "Delay Risk Index", 'font': {'size': 24, 'color': COLOR_MAIN}},
                 number = {'suffix': "%", 'font': {'color': PLOT_TEXT}},
-                gauge = {
-                    'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': PLOT_TEXT},
-                    'bar': {'color': COLOR_MAIN},
-                    'bgcolor': "white",
-                    'borderwidth': 2,
-                    'bordercolor': PLOT_GRID,
-                    'steps': [
-                        {'range': [0, 30], 'color': 'rgba(16, 185, 129, 0.1)'},
-                        {'range': [30, 70], 'color': 'rgba(245, 158, 11, 0.1)'},
-                        {'range': [70, 100], 'color': 'rgba(239, 68, 68, 0.1)'}
-                    ],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 4},
-                        'thickness': 0.75,
-                        'value': 80
-                    }
-                }
+                gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': COLOR_MAIN},
+                         'steps': [{'range': [0, 30], 'color': 'rgba(16, 185, 129, 0.1)'},
+                                   {'range': [30, 70], 'color': 'rgba(245, 158, 11, 0.1)'},
+                                   {'range': [70, 100], 'color': 'rgba(239, 68, 68, 0.1)'}]}
             ))
-            
-            fig.update_layout(
-                paper_bgcolor=PLOT_BG,
-                font={'color': PLOT_TEXT, 'family': 'Inter'},
-                height=400,
-                margin=dict(t=100, b=20, l=50, r=50)
-            )
-            
+            fig.update_layout(paper_bgcolor=PLOT_BG, height=400)
             st.plotly_chart(fig, use_container_width=True)
-            
-            if proba > 0.6:
-                st.error("### HIGH RISK: Logistic Disruption Likely")
-            elif proba > 0.3:
-                st.warning("### MODERATE RISK: Potential Scheduling Conflict")
-            else:
-                st.success("### LOW RISK: Optimal Shipping Pipeline")
+            if proba > 0.6: st.error("### HIGH RISK: Logistic Disruption Likely")
+            elif proba > 0.3: st.warning("### MODERATE RISK: Potential Scheduling Conflict")
+            else: st.success("### LOW RISK: Optimal Shipping Pipeline")
         except Exception as e:
             st.error(f"Prediction error: {e}")
-            st.info("The model features have changed. Please ensure Script 04 has been fully executed with the latest code.")
 
 # ════════════════════════════════════════════════════════════════
-#  SQL ANALYTICS TAB
+#  TAB 5 — SQL
 # ════════════════════════════════════════════════════════════════
 
 def tab_sql():
     st.subheader("SQL Intelligence Layer")
-    st.markdown("Query the centralized SQLite data warehouse directly or view pre-computed strategic insights.")
-    
     tab_pre, tab_custom = st.tabs(["Pre-Computed Insights", "Interactive SQL Sandbox"])
     
     with tab_pre:
         sql_dir = get_path("../outputs/sql_results")
-        if not os.path.exists(sql_dir):
-            st.warning("SQL results not found. Please run Script 06 first.")
-        else:
+        if os.path.exists(sql_dir):
             files = [f for f in os.listdir(sql_dir) if f.endswith(".csv")]
             if files:
-                # Clean names for dropdown
                 file_map = {f.replace(".csv","").replace("_"," ").title(): f for f in sorted(files)}
-                selected_query = st.selectbox("Select SQL Query Result", list(file_map.keys()))
-                
-                if selected_query:
-                    df_sql = pd.read_csv(os.path.join(sql_dir, file_map[selected_query]))
-                    col1, col2 = st.columns([2, 1])
-                    with col1:
-                        st.dataframe(df_sql, use_container_width=True, hide_index=True)
-                    with col2:
-                        st.metric("Total Records", len(df_sql))
-                        st.download_button(
-                            label=f"Export {selected_query} to CSV",
-                            data=df_sql.to_csv(index=False),
-                            file_name=file_map[selected_query],
-                            mime="text/csv",
-                        )
-            else:
-                st.info("No SQL query results available.")
+                sel = st.selectbox("Select SQL Query Result", list(file_map.keys()))
+                if sel:
+                    df_sql = pd.read_csv(os.path.join(sql_dir, file_map[sel]))
+                    st.dataframe(df_sql, use_container_width=True, hide_index=True)
+            else: st.info("No SQL results available.")
+        else: st.warning("SQL results directory not found.")
                 
     with tab_custom:
-        st.markdown("**Write your own SQL query against the database.**")
-        st.caption("Available Tables: `orders`, `products`, `trade`")
-        
-        custom_query = st.text_area(
-            "SQL Editor", 
-            height=150, 
-            value="SELECT \n    market, \n    COUNT(*) as total_orders, \n    ROUND(AVG(profit_margin_pct), 2) as avg_margin\nFROM orders\nGROUP BY market\nORDER BY total_orders DESC;"
-        )
-        
+        custom_query = st.text_area("SQL Editor", height=150, value="SELECT market, COUNT(*) FROM orders GROUP BY market;")
         if st.button("Execute Query"):
             db_path = get_path("../data/supply_chain.db")
-            if not os.path.exists(db_path):
-                st.error("Database not found. Please run Script 06 to generate the SQLite database first.")
-            else:
+            if os.path.exists(db_path):
                 import sqlite3
                 try:
                     conn = sqlite3.connect(db_path)
                     df_custom = pd.read_sql_query(custom_query, conn)
                     conn.close()
-                    
-                    st.success(f"✅ Query executed successfully. Returned {len(df_custom)} rows.")
+                    st.success(f"Executed. Returned {len(df_custom)} rows.")
                     st.dataframe(df_custom, use_container_width=True, hide_index=True)
-                except Exception as e:
-                    st.error(f"SQL Error: {e}")
+                except Exception as e: st.error(f"SQL Error: {e}")
+            else: st.error("Database not found.")
 
 # ════════════════════════════════════════════════════════════════
-#  EXECUTIVE REPORT TAB
+#  TAB 6 — REPORT
 # ════════════════════════════════════════════════════════════════
 
 def tab_report():
     st.subheader("Automated Executive Briefing")
-    st.markdown("Download the full multi-page PDF analysis report generated via Script 07.")
-    
     pdf_path = get_path("../outputs/Supply_Chain_Analysis_Report.pdf")
-    
     if os.path.exists(pdf_path):
         with open(pdf_path, "rb") as f:
             pdf_data = f.read()
-        
         c1, c2 = st.columns([1, 2])
         with c1:
             st.success("Analysis Report Ready")
-            st.download_button(
-                label="Download PDF Report",
-                data=pdf_data,
-                file_name="Supply_Chain_Analysis_Report.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-            st.info("""
-            **Report Contents:**
-            - Executive Summary & KPIs
-            - Root Cause Delay Analysis
-            - Supplier Risk Matrix
-            - ML Model Performance
-            - 180-Day Revenue Forecast
-            - Strategic Recommendations
-            """)
-        
+            st.download_button("Download PDF Report", pdf_data, "Supply_Chain_Analysis_Report.pdf", "application/pdf")
         with c2:
-            st.caption("Document Preview")
             import base64
             base64_pdf = base64.b64encode(pdf_data).decode('utf-8')
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
             st.markdown(pdf_display, unsafe_allow_html=True)
-    else:
-        st.warning("PDF Report not found. Please run Script 07 to generate it.")
+    else: st.warning("PDF Report not found.")
 
 # ════════════════════════════════════════════════════════════════
 #  MAIN
@@ -693,28 +550,21 @@ def tab_report():
 
 def main():
     st.title("Supply Chain Intelligence")
-    st.text("Strategic operations dashboard and predictive risk modeling.")
-    st.markdown("---")
+    
+    # Show banner if deploying to Streamlit Cloud without data
+    if not os.path.exists(get_path("../data/cleaned/dataco_clean.csv")):
+        st.info("Demo Mode: Remote data loading enabled.")
 
     dc = load_dataco()
     pr = load_products()
-    tr = load_trade()
-
+    
     filters = sidebar_filters(dc)
     df_filt = apply_filters(dc, filters)
 
     st.sidebar.markdown("---")
-    st.sidebar.caption(f"System Record Count: {len(df_filt):,}")
+    st.sidebar.caption(f"Operations Count: {len(df_filt):,}")
 
-    t1, t2, t3, t4, t5, t6 = st.tabs([
-        "Performance", 
-        "Disruption", 
-        "Suppliers", 
-        "Risk Engine",
-        "SQL Intelligence",
-        "Executive Report"
-    ])
-    
+    t1, t2, t3, t4, t5, t6 = st.tabs(["Performance", "Disruption", "Suppliers", "Risk Engine", "SQL", "Executive Report"])
     with t1: tab_kpis(df_filt)
     with t2: tab_delays(df_filt)
     with t3: tab_suppliers(pr)

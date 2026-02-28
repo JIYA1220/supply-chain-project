@@ -1,13 +1,13 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
 ║   SUPPLY CHAIN DISRUPTION ANALYSIS                           ║
-║   SCRIPT 7 OF 7 — TIDY MULTI-PAGE STRATEGIC AUDIT           ║
+║   SCRIPT 7 OF 7 — STABILIZED MULTI-PAGE STRATEGIC AUDIT     ║
 ╠══════════════════════════════════════════════════════════════╣
-║  FIXES:                                                      ║
-║  • No Overlapping: Explicit leading for all headers          ║
-║  • Page 3 Restored: Clean KPI Grid (no nested spacers)       ║
-║  • Topic 5 Restored: Fixed numbering sequence                ║
-║  • Strict 1-per-page: Force breaks after every topic         ║
+║  FINAL STABILIZATION:                                        ║
+║  • No Overlapping: Massive leading and paragraph spacing      ║
+║  • Guaranteed Page 3: Fixed table sizing and margins          ║
+║  • Corrected Numbering: Strict 1-per-page flow                ║
+║  • Professional Spacing: Clear gaps between headers/text      ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -42,7 +42,7 @@ DATA_DIR   = os.path.join(BASE_DIR, "data", "cleaned")
 CHART_DIR  = os.path.join(BASE_DIR, "outputs", "charts")
 OUT_PATH   = os.path.join(BASE_DIR, "outputs", "Supply_Chain_Analysis_Report.pdf")
 
-# Visual Palette
+# Corporate Theme
 INDIGO      = colors.HexColor("#4F46E5")
 AMBER       = colors.HexColor("#F59E0B")
 DARK_NAVY   = colors.HexColor("#0F172A")
@@ -56,27 +56,27 @@ def ok(m):   print(f"{Fore.GREEN}  ✔  {m}{Style.RESET_ALL}")
 def section(t): print(f"\n{Fore.CYAN}{'═'*62}\n  {t}\n{'═'*62}{Style.RESET_ALL}")
 
 # ════════════════════════════════════════════════════════════════
-#  STYLES (Fixes overlapping and spacing)
+#  STYLES (High padding and leading)
 # ════════════════════════════════════════════════════════════════
 
 def build_styles():
     base = getSampleStyleSheet()
     styles = {
         "cover_title": ParagraphStyle("ct", fontSize=44, fontName="Helvetica-Bold", textColor=WHITE, leading=52),
-        "cover_sub": ParagraphStyle("cs", fontSize=20, fontName="Helvetica", textColor=SLATE_400, spaceBefore=15, leading=24),
-        "h1": ParagraphStyle("h1", fontSize=26, fontName="Helvetica-Bold", textColor=DARK_NAVY, spaceBefore=10, spaceAfter=20, leading=32),
-        "h2": ParagraphStyle("h2", fontSize=16, fontName="Helvetica-Bold", textColor=INDIGO, spaceBefore=25, spaceAfter=15, leading=20),
-        "body": ParagraphStyle("body", fontSize=11, fontName="Helvetica", textColor=SLATE_700, leading=18, alignment=TA_JUSTIFY, spaceAfter=15),
-        "kpi_val": ParagraphStyle("kv", fontSize=28, fontName="Helvetica-Bold", textColor=INDIGO, alignment=TA_CENTER, leading=34),
+        "cover_sub": ParagraphStyle("cs", fontSize=20, fontName="Helvetica", textColor=SLATE_400, leading=28, spaceBefore=20),
+        "h1": ParagraphStyle("h1", fontSize=24, fontName="Helvetica-Bold", textColor=DARK_NAVY, spaceBefore=10, spaceAfter=25, leading=30),
+        "h2": ParagraphStyle("h2", fontSize=16, fontName="Helvetica-Bold", textColor=INDIGO, spaceBefore=30, spaceAfter=15, leading=22),
+        "body": ParagraphStyle("body", fontSize=11, fontName="Helvetica", textColor=SLATE_700, leading=20, alignment=TA_JUSTIFY, spaceAfter=20),
+        "kpi_val": ParagraphStyle("kv", fontSize=24, fontName="Helvetica-Bold", textColor=INDIGO, alignment=TA_CENTER, leading=28),
         "kpi_lab": ParagraphStyle("kl", fontSize=9, fontName="Helvetica-Bold", textColor=colors.grey, alignment=TA_CENTER, textTransform='uppercase', leading=12),
-        "th": ParagraphStyle("th", fontSize=10, fontName="Helvetica-Bold", textColor=WHITE, alignment=TA_CENTER, leading=12),
+        "th": ParagraphStyle("th", fontSize=10, fontName="Helvetica-Bold", textColor=WHITE, alignment=TA_CENTER, leading=14),
         "tc": ParagraphStyle("tc", fontSize=10, fontName="Helvetica", textColor=SLATE_700, alignment=TA_CENTER, leading=14),
-        "cap": ParagraphStyle("cap", fontSize=9, fontName="Helvetica-Oblique", textColor=colors.grey, alignment=TA_CENTER, spaceBefore=10, leading=11)
+        "cap": ParagraphStyle("cap", fontSize=9, fontName="Helvetica-Oblique", textColor=colors.grey, alignment=TA_CENTER, spaceBefore=15, leading=12)
     }
     return styles
 
 # ════════════════════════════════════════════════════════════════
-#  INTELLIGENCE
+#  DATA LOADING
 # ════════════════════════════════════════════════════════════════
 
 def load_intelligence():
@@ -85,8 +85,6 @@ def load_intelligence():
         return pd.read_csv(p, low_memory=False) if os.path.exists(p) else pd.DataFrame()
 
     dc = read("dataco_clean.csv")
-    pr = read("product_chain_clean.csv")
-    
     intel = {"date": datetime.now().strftime("%B %d, %Y")}
     if not dc.empty:
         intel["revenue"] = dc["sales"].sum()
@@ -100,22 +98,25 @@ def load_intelligence():
     return intel
 
 # ════════════════════════════════════════════════════════════════
-#  BUILDER
+#  SAFE ASSET INJECTION
 # ════════════════════════════════════════════════════════════════
 
-def add_image_safe(story, path, s, caption):
-    """Adds an image to the story only if it exists, otherwise adds a professional placeholder."""
+def add_visual(story, name, s, caption):
+    path = os.path.join(CHART_DIR, name)
     if os.path.exists(path):
-        story.append(Image(path, width=17*cm, height=8*cm, kind="proportional"))
+        story.append(Image(path, width=16.5*cm, height=8.5*cm, kind="proportional"))
         story.append(Paragraph(f"<i>{caption}</i>", s["cap"]))
     else:
         story.append(Spacer(1, 2*cm))
-        story.append(Paragraph(f"[Statistical Asset Not Available: {os.path.basename(path)}]", s["body"]))
-        story.append(Paragraph("This visual is generated during the Prophet Forecasting step. Please ensure Script 04 is fully configured with the required Stan backends.", s["body"]))
+        story.append(Paragraph(f"[Statistical Model Asset: {name} - Re-run Script 04]", s["body"]))
         story.append(Spacer(1, 2*cm))
 
+# ════════════════════════════════════════════════════════════════
+#  REPORT ASSEMBLY
+# ════════════════════════════════════════════════════════════════
+
 def build_elite_report():
-    section("Generating Tidy Strategic Briefing")
+    section("Engineering Stabilized Strategic Briefing")
     intel = load_intelligence()
     s = build_styles()
     
@@ -130,7 +131,7 @@ def build_elite_report():
             canvas.setStrokeColor(BORDER_GRAY); canvas.setLineWidth(0.5)
             canvas.line(1.5*cm, A4[1]-1.2*cm, A4[0]-1.5*cm, A4[1]-1.2*cm)
             canvas.setFont("Helvetica", 8); canvas.setFillColor(colors.grey)
-            canvas.drawString(1.5*cm, 0.8*cm, f"Supply Chain Intelligence | Confidential | {intel['date']}")
+            canvas.drawString(1.5*cm, 0.8*cm, f"Strategic Operations Briefing | Confidential | {intel['date']}")
             canvas.drawRightString(A4[0]-1.5*cm, 0.8*cm, f"Page {doc.page-1}")
         canvas.restoreState()
 
@@ -140,101 +141,136 @@ def build_elite_report():
     story.append(Spacer(1, 8*cm))
     story.append(Paragraph("SUPPLY CHAIN", s["cover_title"]))
     story.append(Paragraph("STRATEGIC AUDIT", s["cover_title"]))
-    story.append(Spacer(1, 0.8*cm))
-    story.append(Paragraph("Advanced Risk Engineering Briefing", s["cover_sub"]))
+    story.append(Spacer(1, 1*cm))
+    story.append(Paragraph("Data Engineering & Risk Prediction Suite", s["cover_sub"]))
     story.append(Spacer(1, 1.5*cm))
     story.append(HRFlowable(width="40%", thickness=5, color=AMBER, hAlign="LEFT"))
     story.append(PageBreak())
     
-    # ── PAGE 2: TOC
-    story.append(Paragraph("Diagnostic Framework", s["h1"]))
-    story.append(Spacer(1, 1*cm))
+    # ── PAGE 2: TABLE OF CONTENTS
+    story.append(Paragraph("Analytical Framework", s["h1"]))
+    story.append(Spacer(1, 0.5*cm))
     toc = [
-        ("I. Executive Performance Summary", "Consolidated KPIs and pipeline health."),
-        ("II. Service Reliability Audit", "Logistical friction and delay drivers."),
-        ("III. Revenue Architecture", "Market velocity and value spreads."),
-        ("IV. Supplier Integrity Matrix", "Upstream risk and lead-time audit."),
-        ("V. Predictive Intelligence", "Algorithmic disruption drivers."),
-        ("VI. Strategic Forecasting", "180-day outlook and peak volume."),
-        ("VII. Global Trade Context", "Macroeconomic trade trends."),
-        ("VIII. Action Roadmap", "Prioritized strategic initiatives.")
+        ("I. Executive Performance Summary", "Consolidated KPIs and business health."),
+        ("II. Service Reliability Audit", "Logistical friction and delay root causes."),
+        ("III. Revenue Architecture", "Analysis of market value distributions."),
+        ("IV. Supplier Integrity Matrix", "Upstream risk and defect variance."),
+        ("V. Predictive Intelligence Drivers", "Algorithmic factors impacting delivery."),
+        ("VI. Strategic Revenue Forecasting", "180-day outlook and trend patterns."),
+        ("VII. Global Trade Context", "Macroeconomic trade corridor patterns."),
+        ("VIII. Strategic Action Roadmap", "Prioritized initiatives for 2026.")
     ]
     for t, d in toc:
         story.append(Paragraph(f"<b>{t}</b>", s["h2"]))
         story.append(Paragraph(d, s["body"]))
     story.append(PageBreak())
     
-    # ── PAGE 3: SUMMARY
+    # ── PAGE 3: EXECUTIVE SUMMARY (TOPIC I)
     story.append(Paragraph("I. Executive Performance Summary", s["h1"]))
-    story.append(Paragraph(f"Total revenue has reached ${intel['revenue']/1e6:.1f}M across {intel['orders']:,} global orders. Financial health remains strong, anchored by the {intel['top_cat']} category.", s["body"]))
+    story.append(Paragraph(
+        f"This audit analyzes {intel['orders']:,} global operations. Current revenue velocity is recorded at "
+        f"${intel['revenue']/1e6:.1f}M, with a primary volume driver identified in the {intel['top_cat']} segment. "
+        f"The pipeline health score is currently rated at {intel['health']:.0f}/100.", s["body"]
+    ))
     story.append(Spacer(1, 1*cm))
     k_data = [
         [Paragraph(f"${intel['revenue']/1e6:.1f}M", s["kpi_val"]), Paragraph(f"{intel['late']:.1f}%", s["kpi_val"])],
-        [Paragraph("Revenue", s["kpi_lab"]), Paragraph("Delay Rate", s["kpi_lab"])],
+        [Paragraph("Gross Revenue", s["kpi_lab"]), Paragraph("Variance (Late)", s["kpi_lab"])],
+        [Spacer(1, 1*cm), Spacer(1, 1*cm)],
         [Paragraph(f"{intel['orders']:,}", s["kpi_val"]), Paragraph(f"{intel['health']:.0f}/100", s["kpi_val"])],
-        [Paragraph("Volume", s["kpi_lab"]), Paragraph("Health Score", s["kpi_lab"])]
+        [Paragraph("Order Volume", s["kpi_lab"]), Paragraph("Health Score", s["kpi_lab"])]
     ]
     kt = Table(k_data, colWidths=[8*cm, 8*cm])
-    kt.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), SLATE_100), ('BOX', (0,0), (-1,-1), 1, BORDER_GRAY), ('TOPPADDING', (0,0), (-1,-1), 20), ('BOTTOMPADDING', (0,0), (-1,-1), 20)]))
+    kt.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), SLATE_100),
+        ('BOX', (0,0), (-1,-1), 1, BORDER_GRAY),
+        ('TOPPADDING', (0,0), (-1,-1), 25),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 25),
+    ]))
     story.append(kt)
     story.append(PageBreak())
     
-    # ── PAGE 4: RELIABILITY
+    # ── PAGE 4: SERVICE RELIABILITY (TOPIC II)
     story.append(Paragraph("II. Service Reliability Audit", s["h1"]))
-    story.append(Paragraph("Analysis identifies specific delay clusters within shipping protocols.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "03_delay_analysis.png"), s, "Delay severity and late delivery rates by protocol.")
-    story.append(Paragraph("Management Insight:", s["h2"]))
-    story.append(Paragraph(f"The {intel['worst_m']} corridor exhibits systemic delay variance.", s["body"]))
-    story.append(PageBreak())
-    
-    # ── PAGE 5: REVENUE
-    story.append(Paragraph("III. Revenue Architecture", s["h1"]))
-    story.append(Paragraph("Value distribution shows a positive skew with high-value order clusters.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "02_sales_distribution.png"), s, "Regional sales density and statistical distribution of valuations.")
-    story.append(PageBreak())
-    
-    # ── PAGE 6: SUPPLIER
-    story.append(Paragraph("IV. Supplier Integrity Matrix", s["h1"]))
-    story.append(Paragraph("Upstream risk is mapped by lead-time variance and defect rates.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "06_supplier_risk.png"), s, "Supplier risk matrix: Defect rates vs lead-times.")
-    story.append(PageBreak())
-    
-    # ── PAGE 7: PREDICTIVE
-    story.append(Paragraph("V. Predictive Intelligence Drivers", s["h1"]))
-    story.append(Paragraph("Algorithmic isolating of features that trigger logistical failure.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "12_feature_importance.png"), s, "Feature importance identifying drivers of delay.")
-    story.append(PageBreak())
-    
-    # ── PAGE 8: FORECAST
-    story.append(Paragraph("VI. Strategic Forecasting", s["h1"]))
-    story.append(Paragraph("180-day outlook accounting for seasonality and momentum.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "13_sales_forecast.png"), s, "Prophet 180-day revenue outlook.")
-    story.append(PageBreak())
-    
-    # ── PAGE 9: TRADE
-    story.append(Paragraph("VII. Global Trade Context", s["h1"]))
-    story.append(Paragraph("Macroeconomic export/import patterns across key trade corridors.", s["body"]))
-    add_image_safe(story, os.path.join(CHART_DIR, "07_global_trade.png"), s, "Global commodity flux and trend analysis.")
-    story.append(PageBreak())
-    
-    # ── PAGE 10: ROADMAP
-    story.append(Paragraph("VIII. Strategic Action Roadmap", s["h1"]))
-    story.append(Paragraph("Prioritized initiatives for 2026 operational optimization.", s["body"]))
-    rd = [
-        [Paragraph("INITIATIVE", s["th"]), Paragraph("STATUS", s["th"]), Paragraph("IMPACT", s["th"])],
-        ["High-Risk Supplier Audit", "CRITICAL", "HIGH"],
-        ["Predictive ERP Integration", "URGENT", "MEDIUM"],
-        ["Routing Optimization", "STRATEGIC", "HIGH"]
-    ]
-    rt = Table(rd, colWidths=[9*cm, 4*cm, 5*cm])
-    rt.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), INDIGO), ('GRID', (0,0), (-1,-1), 0.5, BORDER_GRAY), ('PADDING', (0,0), (-1,-1), 12), ('BACKGROUND', (0,1), (1,1), colors.HexColor("#FEE2E2"))]))
-    story.append(rt)
+    story.append(Paragraph(
+        "Service reliability identifies the delta between promised delivery dates and real-world fulfillment. "
+        "High variance in standard shipping modes suggests a need for priority-based routing for high-value orders.", s["body"]
+    ))
+    add_visual(story, "03_delay_analysis.png", s, "Decomposition of delay severity and late delivery rates by mode.")
     story.append(Spacer(1, 1*cm))
-    story.append(Paragraph("Conclusion", s["h2"]))
-    story.append(Paragraph("Logistical reliability is the foundation for 2026 growth.", s["body"]))
+    story.append(Paragraph("Operational Insight:", s["h2"]))
+    story.append(Paragraph(f"The {intel['worst_m']} corridor exhibits the highest statistical variance.", s["body"]))
+    story.append(PageBreak())
+    
+    # ── PAGE 5: REVENUE ARCHITECTURE (TOPIC III)
+    story.append(Paragraph("III. Revenue Architecture", s["h1"]))
+    story.append(Paragraph(
+        "Revenue architecture maps the density of sales against regional markets. This distribution provides "
+        "insight into the pricing sensitivity and volume-velocity relationship across global segments.", s["body"]
+    ))
+    add_visual(story, "02_sales_distribution.png", s, "Regional sales density and statistical distribution of order valuations.")
+    story.append(PageBreak())
+    
+    # ── PAGE 6: SUPPLIER INTEGRITY (TOPIC IV)
+    story.append(Paragraph("IV. Supplier Integrity Matrix", s["h1"]))
+    story.append(Paragraph(
+        "The integrity matrix is a forward-looking indicator mapping manufacturing defect rates against "
+        "delivery lead-times. Upper-quadrant providers represent systemic risks to fulfillments SLAs.", s["body"]
+    ))
+    add_visual(story, "06_supplier_risk.png", s, "Supply chain risk matrix: Defect rates vs manufacturing lead-time variance.")
+    story.append(PageBreak())
+    
+    # ── PAGE 7: PREDICTIVE INTELLIGENCE (TOPIC V)
+    story.append(Paragraph("V. Predictive Intelligence Drivers", s["h1"]))
+    story.append(Paragraph(
+        "Utilizing Gradient Boosting ensembles, we isolated the primary factors driving supply chain failure. "
+        "Scheduling windows and order timing are identified as the most impactful operational levers.", s["body"]
+    ))
+    add_visual(story, "12_feature_importance.png", s, "Algorithmic Importance: Quantifying the impact of features on delay probability.")
+    story.append(PageBreak())
+    
+    # ── PAGE 8: REVENUE FORECASTING (TOPIC VI)
+    story.append(Paragraph("VI. Strategic Revenue Forecasting", s["h1"]))
+    story.append(Paragraph(
+        "Time-series modeling via Facebook Prophet projects momentum for the next 180 days. Management "
+        "should align carrier capacity with the peak-volume windows identified in this outlook.", s["body"]
+    ))
+    add_visual(story, "13_sales_forecast.png", s, "Prophet Forecast: 180-day revenue outlook with confidence interval bands.")
+    story.append(PageBreak())
+    
+    # ── PAGE 9: GLOBAL TRADE (TOPIC VII)
+    story.append(Paragraph("VII. Global Trade Context", s["h1"]))
+    story.append(Paragraph(
+        "Macroeconomic commodity flux patterns provide the context for localized supply chain stability. "
+        "Shifts in international export/import volumes signal potential upstream supply constraints.", s["body"]
+    ))
+    add_visual(story, "07_global_trade.png", s, "Global commodity flux: Top 15 countries and export/import trends.")
+    story.append(PageBreak())
+    
+    # ── PAGE 10: ACTION ROADMAP (TOPIC VIII)
+    story.append(Paragraph("VIII. Strategic Action Roadmap", s["h1"]))
+    story.append(Paragraph("Prioritized initiatives designed to optimize operational efficiency and reduce variance.", s["body"]))
+    rd_data = [
+        [Paragraph("INITIATIVE", s["th"]), Paragraph("PRIORITY", s["th"]), Paragraph("IMPACT", s["th"])],
+        ["High-Risk Supplier Performance Audit", "CRITICAL", "HIGH"],
+        ["Predictive ERP Integration (Auto-Flagging)", "URGENT", "MEDIUM"],
+        ["LATAM corridor Routing Optimization", "STRATEGIC", "HIGH"],
+        ["Dynamic Shipping SLA Renegotiation", "GROWTH", "MEDIUM"]
+    ]
+    rt = Table(rd_data, colWidths=[9*cm, 4*cm, 5*cm])
+    rt.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), INDIGO), ('GRID', (0,0), (-1,-1), 0.5, BORDER_GRAY),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('PADDING', (0,0), (-1,-1), 12),
+        ('BACKGROUND', (0,1), (1,1), colors.HexColor("#FEE2E2"))
+    ]))
+    story.append(rt)
+    story.append(Spacer(1, 2*cm))
+    story.append(Paragraph("Operational Conclusion", s["h2"]))
+    story.append(Paragraph("Transitioning to predictive routing will provide the moat required for 2026 growth.", s["body"]))
 
+    # Final build
     doc.build(story, onFirstPage=page_layout, onLaterPages=page_layout)
-    ok(f"Final Audit Generated → {OUT_PATH}")
+    ok(f"Professional 10-Page Audit Finalized → {OUT_PATH}")
 
 if __name__ == "__main__":
     build_elite_report()
