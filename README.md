@@ -4,8 +4,6 @@
 
 ### A Production-Grade, End-to-End Data Analytics System
 
-/>
-
 **180,000+ Orders · 3 Datasets · 30+ Features · 3 ML Models · 90% AUC · 15 SQL Queries · Live Dashboard · Automated PDF Reports · Full CI/CD**
 
 <br/>
