@@ -26,6 +26,21 @@ import pandas as pd
 import plotly.express       as px
 import plotly.graph_objects as go
 import streamlit            as st
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+from data_loader import load_data
+
+# Show banner if running on Streamlit Cloud (no real data)
+if not os.path.exists("data/cleaned/dataco_cleaned.csv"):
+    st.info(
+        "Demo Mode: Real datasets are being loaded from Google Drive. "
+        "This may take a moment on first launch.",
+        icon="ℹ️"
+    )
+
+# Load data (auto-downloads from Drive if needed)
+df = load_data()
 
 warnings.filterwarnings("ignore")
 
