@@ -8,8 +8,8 @@ import numpy as np
 # Paste your actual Google Drive file IDs here after uploading
 # ---------------------------------------------------------------
 GDRIVE_FILES = {
-    "data/raw/DataCoSupplyChainDataset.csv":          "YOUR_FILE_ID_1",
-    "data/raw/commodity_trade_statistics_data.csv":   "YOUR_FILE_ID_2",
+    "data/raw/DataCoSupplyChainDataset.csv":          "1SO_hfDduPSVI8awI9rXpQgtk6rXcg_XG",
+    "data/raw/commodity_trade_statistics_data.csv":   "1_Zek9da59HZ_9bSK-nfbqsgPt8oe-83W",
 }
 
 
