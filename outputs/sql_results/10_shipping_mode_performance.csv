@@ -1,0 +1,5 @@
+shipping_mode,total_orders,avg_actual_days,avg_scheduled_days,avg_delay_days,late_rate_pct,avg_order_value,avg_profit_margin
+Standard Class,12500,7.98,3.97,4.01,83.0,2480.98,27.24
+Second Class,12137,8.01,4.0,4.01,83.0,2509.19,25.78
+First Class,12297,7.97,4.01,3.96,82.6,2503.54,26.8
+Same Day,12066,8.03,4.0,4.03,82.4,2514.85,25.71

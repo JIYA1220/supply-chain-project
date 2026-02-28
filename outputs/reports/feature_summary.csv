@@ -1,0 +1,102 @@
+feature,dtype,null_count,nunique,mean
+order_id,int64,0,49000,25009.928
+sales,float64,0,46610,2501.969685714286
+order_item_quantity,int64,0,19,9.997489795918368
+order_item_discount_rate,float64,0,41,0.19967265306122456
+order_item_profit_ratio,float64,0,71,0.14917673469387754
+days_for_shipping_real,float64,0,17,7.995469387755102
+days_for_shipment_scheduled,int64,0,7,3.993612244897959
+late_delivery_risk,int64,0,2,0.8186122448979591
+benefit_per_order,float64,0,38696,297.1961973469388
+order_item_total,float64,0,46702,2511.2685110204084
+product_price,float64,0,43401,999.3813734693877
+delay_days,float64,0,11,4.001857142857143
+is_delayed,int64,0,2,0.8274285714285714
+order_year,int64,0,35,2031.6200612244897
+order_month,int64,0,12,6.494591836734694
+order_quarter,int64,0,4,2.4993673469387754
+order_dayofweek,int64,0,7,2.999408163265306
+profit_margin_pct,float64,0,11920,26.39262102040816
+is_weekend,int32,0,2,0.28561224489795917
+is_month_end,int32,0,2,0.03273469387755102
+is_month_start,int32,0,2,0.032938775510204084
+is_quarter_end,int32,0,2,0.01089795918367347
+week_of_year,int32,0,53,26.488775510204082
+day_of_year,int32,0,366,182.26689795918367
+month_sin,float64,0,11,-0.00017109963412545947
+month_cos,float64,0,11,0.000996533204467741
+dow_sin,float64,0,7,-4.56303465858254e-05
+dow_cos,float64,0,7,-0.0003464896482376672
+delay_rolling_mean_7d,float64,0,63,4.001803734693878
+delay_rolling_std_7d,float64,0,291,3.038254326530612
+sales_rolling_sum_7d,float64,0,48102,17513.027976734695
+sales_rolling_mean_7d,float64,0,43421,2501.99633755102
+profit_rolling_mean_7d,float64,0,28555,26.389220591836732
+delay_rolling_mean_30d,float64,0,147,4.001933367346939
+delay_rolling_std_30d,float64,0,1357,3.0981897551020405
+sales_rolling_sum_30d,float64,0,48607,75038.06550142859
+sales_rolling_mean_30d,float64,0,38173,2502.079009795919
+profit_rolling_mean_30d,float64,0,28520,26.38371993877551
+delay_lag_1,float64,0,11,4.001673469387755
+sales_lag_1,float64,0,46610,2501.918437346939
+delay_lag_3,float64,0,11,4.001591836734694
+sales_lag_3,float64,0,46608,2501.856619387755
+delay_lag_7,float64,0,11,4.001224489795918
+sales_lag_7,float64,0,46604,2501.6955891836737
+delay_change,float64,0,21,0.0001836734693877551
+delay_acceleration,float64,0,41,0.00020408163265306123
+delay_rate_market,float64,0,5,0.8274422163265307
+avg_delay_market,float64,0,5,4.001626102040817
+delay_rate_ship_mode,float64,0,4,0.8274402102040816
+avg_delay_ship_mode,float64,0,4,4.00189418367347
+delay_rate_category,float64,0,6,0.8274314408163265
+avg_delay_category,float64,0,5,4.001857653061225
+delay_rate_country,float64,0,10,0.8274111755102042
+avg_delay_country,float64,0,10,4.001694653061224
+delay_rate_region,float64,0,5,0.827433824489796
+avg_delay_region,float64,0,5,4.001688836734693
+revenue_per_unit,float64,0,36330,463.6312679591837
+is_profitable,int32,0,2,0.7978979591836735
+heavy_discount,int32,0,2,0.4630612244897959
+price_ratio,float64,0,13716,7.544501081632652
+customer_country_Australia,int32,0,2,0.09483673469387754
+customer_country_Brazil,int32,0,2,0.09606122448979591
+customer_country_China,int32,0,2,0.09287755102040816
+customer_country_France,int32,0,2,0.0956938775510204
+customer_country_Germany,int32,0,2,0.0946734693877551
+customer_country_India,int32,0,2,0.14579591836734693
+customer_country_Mexico,int32,0,2,0.09577551020408163
+customer_country_Nigeria,int32,0,2,0.09491836734693877
+customer_country_United States,int32,0,2,0.09255102040816326
+market_Europe,int32,0,2,0.19820408163265307
+market_LATAM,int32,0,2,0.2013265306122449
+market_Pacific Asia,int32,0,2,0.20155102040816328
+market_USCA,int32,0,2,0.19883673469387755
+order_region_Europe,int32,0,2,0.20161224489795918
+order_region_LATAM,int32,0,2,0.19944897959183674
+order_region_Pacific Asia,int32,0,2,0.20257142857142857
+order_region_USCA,int32,0,2,0.19793877551020408
+category_name_Clothing,int32,0,2,0.16818367346938776
+category_name_Electronics,int32,0,2,0.1659795918367347
+category_name_Food,int32,0,2,0.1656530612244898
+category_name_Furniture,int32,0,2,0.16812244897959183
+category_name_Sports,int32,0,2,0.16646938775510203
+department_name_Fan Shop,int32,0,2,0.1680204081632653
+department_name_Golf,int32,0,2,0.16477551020408163
+department_name_Outdoors,int32,0,2,0.1640204081632653
+department_name_Pet Shop,int32,0,2,0.167
+department_name_Technology,int32,0,2,0.17026530612244897
+shipping_mode_Same Day,int32,0,2,0.24624489795918367
+shipping_mode_Second Class,int32,0,2,0.2476938775510204
+shipping_mode_Standard Class,int32,0,2,0.25510204081632654
+order_status_Closed,int32,0,2,0.1
+order_status_Complete,int32,0,2,0.3485918367346939
+order_status_On Hold,int32,0,2,0.061387755102040815
+order_status_Payment Review,int32,0,2,0.0596734693877551
+order_status_Pending,int32,0,2,0.09971428571428571
+order_status_Processing,int32,0,2,0.09261224489795919
+order_status_Shipped,int32,0,2,0.1466530612244898
+order_status_Suspected_Fraud,int32,0,2,0.03918367346938775
+delay_severity_Moderate,int32,0,2,0.27877551020408164
+delay_severity_On Time,int32,0,2,0.17257142857142857
+delay_severity_Severe,int32,0,2,0.3618571428571429

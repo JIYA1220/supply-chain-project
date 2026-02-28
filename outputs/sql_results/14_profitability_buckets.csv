@@ -1,0 +1,5 @@
+profitability_tier,order_count,total_revenue,avg_order_value,avg_margin_pct
+High Margin (30%+),10078,9326162.46,925.4,101.7
+Medium Margin (10-30%),16712,47908411.23,2866.71,17.82
+Low Margin (0-10%),12312,40590627.73,3296.83,5.0
+Loss Making (<0%),9898,24771313.18,2502.66,-9.19

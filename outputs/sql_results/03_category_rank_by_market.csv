@@ -1,0 +1,31 @@
+market,category_name,category_revenue,revenue_rank
+Africa,Clothing,4185922.26,1
+Africa,Furniture,4181193.97,2
+Africa,Sports,4112353.46,3
+Africa,Automotive,4106605.26,4
+Africa,Food,4034424.32,5
+Africa,Electronics,3954402.43,6
+Europe,Food,4186234.22,1
+Europe,Clothing,4163620.48,2
+Europe,Automotive,4089061.48,3
+Europe,Furniture,4047821.25,4
+Europe,Sports,4017415.13,5
+Europe,Electronics,3907549.93,6
+LATAM,Clothing,4142393.23,1
+LATAM,Electronics,4133964.59,2
+LATAM,Sports,4129314.11,3
+LATAM,Furniture,4119308.72,4
+LATAM,Automotive,4059819.93,5
+LATAM,Food,3981570.0,6
+Pacific Asia,Furniture,4427093.95,1
+Pacific Asia,Automotive,4174797.93,2
+Pacific Asia,Electronics,4139876.42,3
+Pacific Asia,Clothing,4088482.81,4
+Pacific Asia,Food,3994335.13,5
+Pacific Asia,Sports,3926677.58,6
+USCA,Electronics,4146114.12,1
+USCA,Furniture,4054669.92,2
+USCA,Sports,4041800.46,3
+USCA,Food,4034491.1,4
+USCA,Clothing,4022932.8,5
+USCA,Automotive,3992267.61,6

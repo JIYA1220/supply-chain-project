@@ -1,0 +1,6 @@
+supplier_name,avg_risk,avg_defect,avg_lead_time,sku_count,risk_segment
+Supplier_1,49.53,0.0777,14.0,201,MEDIUM RISK
+Supplier_5,49.52,0.0771,14.1,202,MEDIUM RISK
+Supplier_3,48.87,0.0775,13.5,187,MEDIUM RISK
+Supplier_2,48.76,0.0696,15.7,202,MEDIUM RISK
+Supplier_4,44.98,0.0672,13.7,208,MEDIUM RISK
