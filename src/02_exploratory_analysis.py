@@ -17,6 +17,7 @@
 ╚══════════════════════════════════════════════════════════════╝
 """
 
+import os
 import warnings
 import pandas as pd
 import numpy  as np
@@ -27,6 +28,27 @@ from colorama import Fore, Style, init
 
 warnings.filterwarnings("ignore")
 init(autoreset=True)
+
+# ── Path Handling ──────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def get_path(rel_path: str) -> str:
+    """
+    Ensure paths work from both the project root and the src/ folder.
+    - If it's a ../ path, go up one level from script directory.
+    - If not, try both the current directory and the script's parent.
+    """
+    if rel_path.startswith("../"):
+        clean_rel = rel_path[3:]
+        base_dir  = os.path.dirname(SCRIPT_DIR)
+        return os.path.join(base_dir, clean_rel)
+
+    # If it's a relative path starting from root, but we're in src/
+    alt_path = os.path.join(os.path.dirname(SCRIPT_DIR), rel_path)
+    if os.path.exists(alt_path) or not os.path.exists(rel_path):
+        return alt_path
+
+    return rel_path
 
 # ════════════════════════════════════════════════════════════════
 #  GLOBAL CHART STYLE  (dark professional theme)
@@ -72,7 +94,8 @@ def note(m):    print(f"{Fore.YELLOW}  ℹ  {m}{Style.RESET_ALL}")
 CHART_DIR = "outputs/charts"
 
 def save(name: str) -> None:
-    path = f"{CHART_DIR}/{name}.png"
+    path = get_path(f"{CHART_DIR}/{name}.png")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     plt.savefig(path, bbox_inches="tight", facecolor=BG)
     plt.close()
     ok(f"Chart saved → {path}")
@@ -95,6 +118,7 @@ def load_all():
     section("Loading Cleaned Datasets")
 
     def read(path, label):
+        path = get_path(path)
         df = pd.read_csv(path, low_memory=False)
         for col in df.columns:
             if "date" in col:
@@ -120,10 +144,15 @@ def summary_stats(dc, pr, tr):
         print(num.describe().round(2).to_string())
 
     # Save as CSV reports
-    dc.describe().round(2).to_csv("outputs/reports/dataco_stats.csv")
-    pr.describe().round(2).to_csv("outputs/reports/product_stats.csv")
-    tr.describe().round(2).to_csv("outputs/reports/trade_stats.csv")
-    ok("Summary CSVs saved to outputs/reports/")
+    path_dc = get_path("outputs/reports/dataco_stats.csv")
+    path_pr = get_path("outputs/reports/product_stats.csv")
+    path_tr = get_path("outputs/reports/trade_stats.csv")
+
+    os.makedirs(os.path.dirname(path_dc), exist_ok=True)
+    dc.describe().round(2).to_csv(path_dc)
+    pr.describe().round(2).to_csv(path_pr)
+    tr.describe().round(2).to_csv(path_tr)
+    ok(f"Summary CSVs saved to outputs/reports/")
 
 
 # ════════════════════════════════════════════════════════════════

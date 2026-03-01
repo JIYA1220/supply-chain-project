@@ -15,6 +15,7 @@
 ╚══════════════════════════════════════════════════════════════╝
 """
 
+import os
 import warnings
 import pandas as pd
 import numpy  as np
@@ -23,6 +24,27 @@ from colorama import Fore, Style, init
 
 warnings.filterwarnings("ignore")
 init(autoreset=True)
+
+# ── Path Handling ──────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def get_path(rel_path: str) -> str:
+    """
+    Ensure paths work from both the project root and the src/ folder.
+    - If it's a ../ path, go up one level from script directory.
+    - If not, try both the current directory and the script's parent.
+    """
+    if rel_path.startswith("../"):
+        clean_rel = rel_path[3:]
+        base_dir  = os.path.dirname(SCRIPT_DIR)
+        return os.path.join(base_dir, clean_rel)
+
+    # If it's a relative path starting from root, but we're in src/
+    alt_path = os.path.join(os.path.dirname(SCRIPT_DIR), rel_path)
+    if os.path.exists(alt_path) or not os.path.exists(rel_path):
+        return alt_path
+
+    return rel_path
 
 
 def section(t): print(f"\n{Fore.CYAN}{'═'*62}\n  {t}\n{'═'*62}{Style.RESET_ALL}")
@@ -45,7 +67,8 @@ def find(df, candidates):
 
 def load_data():
     section("Loading Cleaned DataCo Dataset")
-    df = pd.read_csv("../data/cleaned/dataco_clean.csv", low_memory=False)
+    path = get_path("../data/cleaned/dataco_clean.csv")
+    df = pd.read_csv(path, low_memory=False)
     for col in df.columns:
         if "date" in col:
             df[col] = pd.to_datetime(df[col], errors="coerce")
@@ -272,11 +295,14 @@ def finalise(df):
 
     ok(f"Final ML dataset shape: {df.shape[0]:,} rows × {df.shape[1]} features")
 
-    path = "../data/final/ml_ready.csv"
+    path = get_path("../data/final/ml_ready.csv")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     df.to_csv(path, index=False)
     ok(f"Saved → {path}")
 
     # Feature summary report
+    report_path = get_path("outputs/reports/feature_summary.csv")
+    os.makedirs(os.path.dirname(report_path), exist_ok=True)
     summary = pd.DataFrame({
         "feature"   : df.columns,
         "dtype"     : df.dtypes.values,
@@ -284,8 +310,8 @@ def finalise(df):
         "nunique"   : df.nunique().values,
         "mean"      : df.mean(numeric_only=True).reindex(df.columns).values,
     })
-    summary.to_csv("outputs/reports/feature_summary.csv", index=False)
-    ok("Feature summary saved → outputs/reports/feature_summary.csv")
+    summary.to_csv(report_path, index=False)
+    ok(f"Feature summary saved → {report_path}")
 
     return df
 
