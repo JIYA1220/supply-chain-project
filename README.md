@@ -453,16 +453,3 @@ Built by **Jiya**
 *If this project was useful to you, consider starring the repository.*
 
 ---
-
-## License
-
-MIT License — free to use, fork, learn from, and build upon.
-
-```
-MIT License
-Copyright (c) 2026 Jiya
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software.
-```
