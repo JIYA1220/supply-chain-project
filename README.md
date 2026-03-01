@@ -8,7 +8,7 @@
 
 <br/>
 
-[Quick Start](#quick-start) &nbsp;·&nbsp; [Results](#key-results) &nbsp;·&nbsp; [Architecture](#architecture) &nbsp;·&nbsp; [Project Structure](#project-structure) &nbsp;·&nbsp; [Tests](#tests) &nbsp;·&nbsp
+[Quick Start](#quick-start) &nbsp;·&nbsp; [Results](#key-results) &nbsp;·&nbsp; [Architecture](#architecture) &nbsp;·&nbsp; [Project Structure](#project-structure) &nbsp;·&nbsp; [Tests](#tests) &nbsp;·&nbsp;
 
 ---
 
