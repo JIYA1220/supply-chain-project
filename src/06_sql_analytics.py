@@ -6,11 +6,12 @@
 ║  What this script does:                                      ║
 ║  • Loads cleaned data into a local SQLite database           ║
 ║    (works without PostgreSQL installed — same SQL syntax)    ║
-║  • Runs 15 production-grade SQL queries covering:            ║
+║  • Runs 16 production-grade SQL queries covering:            ║
 ║    - Aggregations, GROUP BY, HAVING                          ║
-║    - Window functions (RANK, ROW_NUMBER, LAG, LEAD)          ║
+║    - Window functions (RANK, ROW_NUMBER, LAG, LEAD, NTILE)    ║
 ║    - CTEs (Common Table Expressions)                         ║
 ║    - Subqueries & JOINs across tables                        ║
+║    - Sequential market order analysis (LAG + ROW_NUMBER)     ║
 ║    - Rolling averages using window frames                    ║
 ║  • Saves all query results as CSVs                           ║
 ║  • Prints results to console in a formatted table            ║
@@ -145,7 +146,7 @@ def run_query(name: str, sql: str, description: str) -> pd.DataFrame:
 # ════════════════════════════════════════════════════════════════
 
 def run_all_queries():
-    section("Running 15 SQL Analytics Queries")
+    section("Running 16 SQL Analytics Queries")
 
     # ── Q1: Basic aggregation — revenue & orders by market ───────
     run_query(
@@ -492,6 +493,38 @@ def run_all_queries():
         """
     )
 
+    # ── Q16: ADVANCED WINDOWING — LAG and ROW_NUMBER ──────────────
+    run_query(
+        name        = "16_market_order_sequence",
+        description = "Analyze sequential orders within each market using LAG() and ROW_NUMBER() together.",
+        sql         = """
+            SELECT
+                market,
+                order_date,
+                category_name,
+                sales,
+                -- 1. Sequential order rank within each market (ROW_NUMBER)
+                ROW_NUMBER() OVER (
+                    PARTITION BY market
+                    ORDER BY order_date
+                ) AS market_order_rank,
+                -- 2. Sales from the previous order in the same market (LAG)
+                LAG(sales) OVER (
+                    PARTITION BY market
+                    ORDER BY order_date
+                ) AS prev_order_sales,
+                -- 3. Revenue delta from the last order in this market
+                ROUND(sales - LAG(sales) OVER (
+                    PARTITION BY market
+                    ORDER BY order_date
+                ), 2) AS revenue_delta
+            FROM orders
+            WHERE market IS NOT NULL
+            ORDER BY market, order_date
+            LIMIT 20
+        """
+    )
+
 
 # ════════════════════════════════════════════════════════════════
 #  MAIN
@@ -508,12 +541,13 @@ def main():
     section("✅ STEP 6 COMPLETE")
     print(f"""
 {Fore.GREEN}  Database created:  data/supply_chain.db
-  Query results:     outputs/sql_results/ (15 CSV files)
+  Query results:     outputs/sql_results/ (16 CSV files)
 
   Queries demonstrated:
     • GROUP BY + aggregations (SUM, AVG, COUNT)
     • HAVING for post-aggregation filtering
-    • Window functions: RANK, ROW_NUMBER, NTILE, LAG, LEAD
+    • Window functions (VISIBLE): LAG, ROW_NUMBER, RANK, NTILE, LEAD
+    • Complex windowing: Combinations of LAG + ROW_NUMBER
     • Running totals: SUM() OVER with ROWS BETWEEN
     • CTEs (Common Table Expressions)
     • JOINs across orders + products tables
