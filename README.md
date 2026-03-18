@@ -24,6 +24,12 @@ This project is a complete, production-grade analytics system built to answer th
 This is not a notebook. It is a **7-stage pipeline** that mirrors how real data engineering and analytics teams operate at scale.
 
 ---
+## Business Impact 
+This system enables an operations team to act on delivery risk before SLA breaches occur, not after. With 54.8% of 180,000+ orders historically delayed, the Gradient Boosting model (90% AUC) scores every incoming order by delay probability — surfacing the highest-risk shipments 48 hours in advance so teams can expedite carriers, reroute logistics, or escalate supplier follow-ups before the window closes.
+
+The SQL analytics layer identifies which markets, suppliers, and shipping modes contribute most to delays and profit margin erosion — giving procurement and ops leadership a ranked priority list for process improvements rather than a flat report.
+
+The automated 10-page executive PDF report and live Streamlit dashboard mean the analysis runs without manual effort on every data refresh — turning a one-time analysis into an always-on operational intelligence system.
 
 ## Key Results
 
